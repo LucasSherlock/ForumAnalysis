@@ -1,7 +1,0 @@
-_id,isQuestion,questionURL,sentences
-0,True,https://support.mozilla.org/en-US/questions/1220061,"['(email)', '(email)']"
-1,True,https://support.mozilla.org/en-US/questions/1229829,"['(phishing?) refferal from mozilla firefox rocket', 'i got this today from site', 'http://mozilla.ref-r.com', 'is this phishing\xa0?', 'thank you']"
-2,True,https://support.mozilla.org/en-US/questions/1184464,"['CAN YOU USE ROCKET IN THE UNITED STATES?', 'JUST WONDERING IF ROCKET CAN BE USED IN THE US']"
-3,False,https://support.mozilla.org/en-US/questions/1220061,"['Hi', 'I am removed your email address for your privacy and security but I am not sure what you issue is with Firefox Rocket.', 'If you can let us know, we will do our best to help.']"
-4,False,https://support.mozilla.org/en-US/questions/1229829,"['Hi,', 'We confirm this is not phishing', 'This is a referral campaign we ran in Indonesia', 'The campaign ended in 2 days due to its popularity', 'Stay tuned for future activities.', 'Thank you!']"
-5,False,https://support.mozilla.org/en-US/questions/1184464,"['Hello, you can build it manually from the github page using Android Studio for use in other countries:', 'https://github.com/mozilla-tw/Rocket', 'Otherwise, no it cannot', ""Firefox Focus offers the same thing, just without 'turbo' mode.""]"
