@@ -107,11 +107,13 @@ for qDoc in qCursor:
     # Split question text based on either a period, question mark or exclamation mark followed by whitespace or a newline
     qSentences = split_sentences(qText)
     
+    
     # Get the Asker and URL of the question
     qAsker = qDoc["questionAsker"]
     qURL = qDoc["questionURL"]
+    qTime = qDoc["questionTime"]
 
-    qEntry = { "_id" : id, "isQuestion" : True, "questionURL" : qURL, "sentences" : qSentences }
+    qEntry = { "_id" : id, "time" : qTime, "isQuestion" : True, "questionURL" : qURL, "sentences" : qSentences }
     id += 1
     entries.append(qEntry)
 
@@ -123,9 +125,9 @@ qid = 0
 while qid < numQs:
     qURL = get_qURL_by_id(entries, qid)
 
-    # Query the replies collection for replies with the same question URL
+    # Query the replies collection for replies with the same question URL, sort replies by time
     query = { "questionURL" : qURL }
-    rCursor = replyCollection.find(query)
+    rCursor = replyCollection.find(query).sort("replyTime")
 
     
     
@@ -133,8 +135,9 @@ while qid < numQs:
         
         rText = rDoc["replyText"]
         rSentences = split_sentences(rText)
+        rTime = rDoc["replyTime"]
 
-        rEntry = { "_id" : id, "isQuestion" : False, "questionURL" : qURL, "sentences" : rSentences }
+        rEntry = { "_id" : id, "time" : rTime, "isQuestion" : False, "questionURL" : qURL, "sentences" : rSentences }
         entries.append(rEntry)
         id += 1
     
@@ -143,7 +146,7 @@ while qid < numQs:
 # --------------------CSV-----------------------------
 if _csv:
     with open("sentences.csv", "w", newline='', encoding='utf-8') as sentFile:
-        csvHeader = ["_id", "isQuestion", "questionURL", "sentences"]
+        csvHeader = ["_id", "time", "isQuestion", "questionURL", "sentences"]
         writer = csv.DictWriter(sentFile, fieldnames=csvHeader)
         writer.writeheader()
         writer.writerows(entries)
