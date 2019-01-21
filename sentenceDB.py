@@ -84,6 +84,8 @@ replyCollection = mozDB[colName + " - Reply"]
 # List to hold all entries
 entries = []
 
+# List to identify questions
+questions = []
 
 qCursor = collection.find({})
 id = 0
@@ -91,10 +93,12 @@ id = 0
 
 numQs = int(input("How many questions? "))
 
+i = 0
+
 for qDoc in qCursor:
 
     # Only take a specified number of questions
-    if id >= numQs: 
+    if i >= numQs: 
         break
     
 
@@ -113,9 +117,18 @@ for qDoc in qCursor:
     qURL = qDoc["questionURL"]
     qTime = qDoc["questionTime"]
 
-    qEntry = { "_id" : id, "time" : qTime, "isQuestion" : True, "questionURL" : qURL, "sentences" : qSentences }
-    id += 1
-    entries.append(qEntry)
+    for sentence in qSentences:
+        qEntry = { "_id" : id, "time" : qTime, "isQuestion" : True, "sentenceAuthor" : qAsker, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
+        entries.append(qEntry)
+        id += 1
+    
+
+    questions.append({"_id" : i, "questionURL" : qURL})
+
+    i += 1
+    
+    
+    
 
 
 
@@ -123,7 +136,7 @@ for qDoc in qCursor:
 
 qid = 0
 while qid < numQs:
-    qURL = get_qURL_by_id(entries, qid)
+    qURL = get_qURL_by_id(questions, qid)
 
     # Query the replies collection for replies with the same question URL, sort replies by time
     query = { "questionURL" : qURL }
@@ -132,21 +145,23 @@ while qid < numQs:
     
     
     for rDoc in rCursor:
-        
+        rAuthor = rDoc["replyAuthor"]
+        qAsker = rDoc["questionAsker"]
         rText = rDoc["replyText"]
         rSentences = split_sentences(rText)
         rTime = rDoc["replyTime"]
-
-        rEntry = { "_id" : id, "time" : rTime, "isQuestion" : False, "questionURL" : qURL, "sentences" : rSentences }
-        entries.append(rEntry)
-        id += 1
+        for sentence in rSentences:
+            rEntry = { "_id" : id, "time" : rTime, "isQuestion" : False, "sentenceAuthor" : rAuthor, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
+            entries.append(rEntry)
+            id += 1
+        
     
     qid += 1
 
 # --------------------CSV-----------------------------
 if _csv:
     with open("sentences.csv", "w", newline='', encoding='utf-8') as sentFile:
-        csvHeader = ["_id", "time", "isQuestion", "questionURL", "sentences"]
+        csvHeader = ["_id", "time", "isQuestion", "sentenceAuthor", "questionAsker", "questionURL", "sentenceText"]
         writer = csv.DictWriter(sentFile, fieldnames=csvHeader)
         writer.writeheader()
         writer.writerows(entries)
