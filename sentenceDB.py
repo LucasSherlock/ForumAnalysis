@@ -12,13 +12,8 @@ def get_qURL_by_id(list, id):
         if dict["_id"] == id:
             return dict["questionURL"]
 
-
-def split_sentences(text):
-    sentences = []
-    for string in text:
-        split = re.split(r"[\.\?!][\s\n]", string)
-        sentences.extend(split)
-
+def split_string(string):
+    sentences = re.findall(r".+?(?:[\.\?!][\s\n]|\Z)", string, flags = re.DOTALL)
     return sentences
 
 
@@ -102,14 +97,18 @@ for qDoc in qCursor:
         break
     
 
-    # Get all text from the question. This includes both the title and the body 
-    qText = []
-    qText.append(qDoc["questionTitle"])
-    qText.extend(qDoc["questionText"])
+    # Merge all the text from the question into one string 
+    mergedText = qDoc["questionText"][0]
+    n = 1
+    while n < len(qDoc["questionText"]):
+        mergedText = mergedText + " " + qDoc["questionText"][n]
+        n += 1
 
 
     # Split question text based on either a period, question mark or exclamation mark followed by whitespace or a newline
-    qSentences = split_sentences(qText)
+    qSentences = []
+    qSentences.extend(split_string(qDoc["questionTitle"]))
+    qSentences.extend(split_string(mergedText))
     
     
     # Get the Asker and URL of the question
@@ -147,8 +146,14 @@ while qid < numQs:
     for rDoc in rCursor:
         rAuthor = rDoc["replyAuthor"]
         qAsker = rDoc["questionAsker"]
-        rText = rDoc["replyText"]
-        rSentences = split_sentences(rText)
+        
+        mergedText = rDoc["replyText"][0]
+        n = 1
+        while n < len(rDoc["replyText"]):
+            mergedText = mergedText + " " + rDoc["replyText"][n]
+            n += 1
+
+        rSentences = split_string(mergedText)
         rTime = rDoc["replyTime"]
         for sentence in rSentences:
             rEntry = { "_id" : id, "time" : rTime, "isQuestion" : False, "sentenceAuthor" : rAuthor, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
