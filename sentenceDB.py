@@ -74,13 +74,10 @@ collection = mozDB[colName]
 replyCollection = mozDB[colName + " - Reply"]
 
 
-#------------------------------------QUESTION---------------------------------
+#------------------------------------ENTRIES---------------------------------
 
 # List to hold all entries
 entries = []
-
-# List to identify questions
-questions = []
 
 qCursor = collection.find({})
 id = 0
@@ -104,48 +101,33 @@ for qDoc in qCursor:
         mergedText = mergedText + " " + qDoc["questionText"][n]
         n += 1
 
-
-    # Split question text based on either a period, question mark or exclamation mark followed by whitespace or a newline
-    qSentences = []
-    qSentences.extend(split_string(qDoc["questionTitle"]))
-    qSentences.extend(split_string(mergedText))
-    
-    
     # Get the Asker and URL of the question
     qAsker = qDoc["questionAsker"]
     qURL = qDoc["questionURL"]
-    qTime = qDoc["questionTime"]
+    
+    # Add the title of the question as a sentence
+    entry = { "_id" : id, "postPosition" : "Title", "sentenceAuthor" : qAsker, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : qDoc["questionTitle"] }
+    entries.append(entry)
+    id += 1
+
+    # Split question text based on either a period, question mark or exclamation mark followed by whitespace or a newline
+    qSentences = []
+    qSentences.extend(split_string(mergedText))
+    
 
     for sentence in qSentences:
-        qEntry = { "_id" : id, "time" : qTime, "isQuestion" : True, "sentenceAuthor" : qAsker, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
-        entries.append(qEntry)
+        entry = { "_id" : id, "postPosition" : "Original Post", "sentenceAuthor" : qAsker, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
+        entries.append(entry)
         id += 1
     
-
-    questions.append({"_id" : i, "questionURL" : qURL})
-
-    i += 1
-    
-    
-    
-
-
-
-# -----------------------REPLIES---------------------------------------
-
-qid = 0
-while qid < numQs:
-    qURL = get_qURL_by_id(questions, qid)
-
     # Query the replies collection for replies with the same question URL, sort replies by time
     query = { "questionURL" : qURL }
     rCursor = replyCollection.find(query).sort("replyTime")
 
-    
-    
+    postPos = 1
+
     for rDoc in rCursor:
         rAuthor = rDoc["replyAuthor"]
-        qAsker = rDoc["questionAsker"]
         
         mergedText = rDoc["replyText"][0]
         n = 1
@@ -154,19 +136,24 @@ while qid < numQs:
             n += 1
 
         rSentences = split_string(mergedText)
-        rTime = rDoc["replyTime"]
         for sentence in rSentences:
-            rEntry = { "_id" : id, "time" : rTime, "isQuestion" : False, "sentenceAuthor" : rAuthor, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
-            entries.append(rEntry)
-            id += 1
-        
-    
-    qid += 1
+            postPosStr = str(postPos)
+            
+            if qAsker == rAuthor:
+                postPosStr = postPosStr + " - op"
+            
 
+            entry = { "_id" : id, "postPosition" : postPosStr, "sentenceAuthor" : rAuthor, "questionAsker" : qAsker, "questionURL" : qURL, "sentenceText" : sentence }
+            entries.append(entry)
+            id += 1
+        postPos += 1
+
+    i += 1
+    
 # --------------------CSV-----------------------------
 if _csv:
     with open("sentences.csv", "w", newline='', encoding='utf-8') as sentFile:
-        csvHeader = ["_id", "time", "isQuestion", "sentenceAuthor", "questionAsker", "questionURL", "sentenceText"]
+        csvHeader = ["_id", "postPosition", "sentenceAuthor", "questionAsker", "questionURL", "sentenceText"]
         writer = csv.DictWriter(sentFile, fieldnames=csvHeader)
         writer.writeheader()
         writer.writerows(entries)
