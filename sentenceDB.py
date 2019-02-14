@@ -79,12 +79,17 @@ replyCollection = mozDB[colName + " - Reply"]
 # List to hold all entries
 entries = []
 
-qCursor = collection.find({})
-id = 0
+
+
 
 
 numQs = int(input("How many questions? "))
 
+# use pymongo sample aggregation to get a random sample of questions
+pipeline = [{"$sample" : { "size" : numQs }}]
+qCursor = collection.aggregate(pipeline)
+
+id = 0
 i = 0
 
 for qDoc in qCursor:
